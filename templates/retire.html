@@ -14,7 +14,7 @@
 	</head>
 <body>
 	<div class="container">
-  	<form action='/retire' method="post">
+  	<form action='/retire' id="retireForm" method="post">
   		<div>
   		<input type="text" id="username" value="{{request.form.username}}"  class="input-block-level" placeholder="username">
   		</div>
@@ -93,6 +93,7 @@
 			document.getElementById('myDropdown').textContent = e.target.text;
 			// 重新加载场次信息
 		    $('#retireTable').bootstrapTable("load", allLevel[e.target.text]);
+		    $('#retireForm').submit();
 			e.preventDefault();
 		});
 	</script>
