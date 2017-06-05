@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap-table.min.css') }}" rel="stylesheet">
+    <!-- JavaScript -->
+    <script src="static/js/jquery.min.js"></script>
+    <script src="static/js/bootstrap.min.js"></script>
+    <script src="static/js/bootstrap-table.min.js"></script>
+    <!-- Own JavaScript -->
+    <!-- <script src="static/ownjs/retire.js"></script> -->
+	</head>
+<body>
+	<div class="container">
+  	<form action='/retire' method="post">
+  		<div>
+  		<input type="text" id="username" value="{{request.form.username}}"  class="input-block-level" placeholder="username">
+  		</div>
+  		<!-- Example single danger button -->
+		<div class="btn-group">
+		  <button id="myDropdown" name="selIdx" type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			普通场
+		  </button>
+		  <div class="dropdown-menu">
+		    <a class="dropdown-item" id="action-1" href="#">普通场</a>
+		    <a class="dropdown-item" id="action-2" href="#">癞子场</a>
+		    <a class="dropdown-item" id="action-3" href="#">双癞子场</a>
+		    <div class="dropdown-divider"></div>
+		    <a class="dropdown-item" id="action-4" href="#">四人场</a>
+		  </div>
+		</div>
+        <table id="retireTable">
+        <thead>
+            <tr>
+            	<th data-field="host">域名</th>
+                <th data-field="level">Level</th>
+                <th data-field="playnum">在玩人数</th>
+                <th data-field="option">退休操作</th>
+            </tr>
+        </thead>
+    	</table>
+    	<button type="submit" class="btn btn-primary btn-lg">全部退休</button>
+  	</form>
+  	<script>
+  		var putongLevel = 
+		[
+		    {"host": "192.168.201.75",  "level": 201, "playnum": 276, "option": "None"},
+		    {"host": "192.168.201.159", "level": 202, "playnum": 389, "option": "None"},
+		];
+		
+		var laiziLevel = 
+		[
+			{"host": "192.168.201.138", "level": 2001, "playnum": 135, "option": "None"},
+		    {"host": "192.168.201.142", "level": 2002, "playnum": 498, "option": "None"},	
+		];
+		
+		var doublelaiziLevel = 
+		[
+			{"host": "192.168.201.162", "level": 5001, "playnum": 268, "option": "None"},
+		    {"host": "192.168.201.143", "level": 5002, "playnum": 367, "option": "None"},
+		    {"host": "192.168.201.41",  "level": 5003, "playnum": 198, "option": "None"},	
+		];
+		
+		var fourLevel = 
+		[
+		    {"host": "192.168.201.189", "level": 1001, "playnum": 371, "option": "None"},
+		    {"host": "192.168.201.5",   "level": 1002, "playnum": 412, "option": "None"},
+		];
+		
+		// 不需要根据下拉菜单index, 根据名称能智能动态删减
+		var allLevel = 
+		{
+			"普通场": putongLevel,
+			"癞子场": laiziLevel,
+			"双癞子场": doublelaiziLevel,
+			"四人场": fourLevel,
+		};
+		
+		// 表格展示
+		$(function ShowRetireTable() {
+			// 引用html变量changci
+			var points = JSON.parse('{{ changci|safe }}');
+		    $('#retireTable').bootstrapTable({
+		        data: points
+		    });
+		});
+		
+		// 下拉框变化
+		// 所有下拉框执行同一个事件回调函数,class=".dropdown-item"
+		$(".dropdown-item").click(function(e){			
+			document.getElementById('myDropdown').textContent = e.target.text;
+			// 重新加载场次信息
+		    $('#retireTable').bootstrapTable("load", allLevel[e.target.text]);
+			e.preventDefault();
+		});
+	</script>
+	</div>
+</body>
+</html>

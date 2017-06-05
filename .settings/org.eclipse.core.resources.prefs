@@ -1,0 +1,17 @@
+eclipse.preferences.version=1
+encoding//base/core/baseserver.py=utf-8
+encoding//base/core/clienthandler.py=utf-8
+encoding//base/core/log.py=utf-8
+encoding//base/core/packet.py=utf-8
+encoding//base/core/pb_msg.py=utf-8
+encoding//base/core/poller.py=utf-8
+encoding//base/core/protocol.py=utf-8
+encoding//base/core/reactor.py=utf-8
+encoding//base/core/rpc_channel.py=utf-8
+encoding//base/core/tcpclient.py=utf-8
+encoding//base/core/tcphandler.py=utf-8
+encoding//base/core/tcplistener.py=utf-8
+encoding//base/core/udpclient.py=utf-8
+encoding//base/core/udplistener.py=utf-8
+encoding/retire.py=utf-8
+encoding/server_unit_test.py=utf-8
