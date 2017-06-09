@@ -20,11 +20,15 @@ app = Flask(__name__)
 # 展示退休页面
 @app.route('/retire', methods=['GET'])
 def ShowRetire():
+    putongLevel = [{"host": "192.168.201.75",  "level": 201, "playnum": 276, "option": "None"},
+                    {"host": "192.168.201.159", "level": 202, "playnum": 389, "option": "None"}]
+    laiziLevel = [{"host": "192.168.201.138", "level": 2001, "playnum": 135, "option": "None"},
+                  {"host": "192.168.201.142", "level": 2002, "playnum": 498, "option": "None"}]
     fourLevel = [{"host": "192.168.201.189", "level": 10086, "playnum": 371, "option": "None"},
                  {"host": "192.168.201.5",   "level": 20033, "playnum": 496, "option": "None"}]
     doublelaiziLevel = [{"host": "192.168.201.162", "level": 5001, "playnum": 268, "option": "None"},
                         {"host": "192.168.201.143", "level": 5002, "playnum": 367, "option": "None"},
-                        {"host": "192.168.201.41",  "level": 5003, "playnum": 198, "option": "None"}];
+                        {"host": "192.168.201.41",  "level": 5003, "playnum": 198, "option": "None"}]
     return render_template('retire.html', changci=json.dumps(fourLevel))
     
 # 处理退休表单请求
@@ -32,7 +36,7 @@ def ShowRetire():
 def HandleRetire():
     return 'ooooo request'
 
-def ProcessCommand(name):    
+def ProcessCommand(name):
     while(1):
         print('[%s] run child process %s (%s)' % (time.asctime(), name, os.getpid()))
         sys.stdout.flush()
