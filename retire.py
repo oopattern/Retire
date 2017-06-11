@@ -28,6 +28,9 @@ def ShowRetire(choice=u'普通场'):
 @app.route('/retire', methods=['POST'])
 def HandleRetire():
     allop = request.form
+    return json.dumps(allop)
+
+    """
     if(allop.has_key('allretire')):
         return '<p>' + u'执行全部退休' + '</p>'
     elif(allop.has_key('oneretire')):
@@ -35,6 +38,7 @@ def HandleRetire():
     elif(allop.has_key('opmenu') and allop['opmenu'] != ''):
         return ShowRetire(allop['opmenu'])
     return 'submit option no found...'
+    """
     
 if __name__ =='__main__':
     print('say goodbye!')
