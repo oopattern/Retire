@@ -47,11 +47,11 @@
 			var rowNum = $('#retireTable').bootstrapTable('getData').length;
 		    for(i = 0; i < rowNum; i++)
 		    {
-				UpdateTableCell(i, "option", '<button type="button" name="oneretire" class="btn btn-success">退休操作</button>');   	
-		    }
+		    	UpdateTableCell(i, "option", '<button type="button" onclick="DoRetire();" class="btn btn-success">退休操作</button>');
+			}
 		};
 		
-		//更新单元格内容
+		// 更新单元格内容
 		function UpdateTableCell(row, field, val){
 			// 更新表格列"option"展示变为按钮
 		    $('#retireTable').bootstrapTable('updateCell', {
@@ -61,12 +61,18 @@
             });			
 		};
 		
-		$("btn btn-success").click(function(e) {
-			var tbldata = JSON.stringify($('#retireTable').bootstrapTable('getData'));
-			alert(tbldata);
-			$('#opform').val(tbldata);
-		    $('#retireForm').submit();	
-		});
+		// 单个场次退休操作
+		function DoRetire() {
+			var tbldata = $('#retireTable').bootstrapTable('getData');
+			tbldata.remove('option');
+			var rows = tbldata.length;
+			for(var i = 0; i < rows; i++)
+			{
+				alert(JSON.stringify(tbldata[i]));	
+			}
+			$('#opform').val('12345678');
+		    $('#retireForm').submit();
+		};
 		
 		// 下拉框变化
 		// 所有下拉框执行同一个事件回调函数,class=".dropdown-item"
