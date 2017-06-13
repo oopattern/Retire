@@ -28,29 +28,11 @@
 		    <a class="dropdown-item" href="#">四人场</a>
 		  	</div>
 		</div>
-        <table id="retireTable">
-        <thead>
-            <tr>
-            	<th data-field="host">域名</th>
-                <th data-field="level">Level</th>
-                <th data-field="playnum">在玩人数</th>
-                <th data-field="option">操作</th>
-            </tr>
-        </thead>
-    	</table>
+        <table id="retireTable"></table>	
     	<input type="hidden" id="opform" name='opform' value={{request.form['opform']}}>
-    	<button type="submit" name="allretire" class="btn btn-primary btn-lg">全部退休</button>
+    	<button type="button" onclick="DoAllRetire();" class="btn btn-primary btn-lg">全部退休</button>
   	</form>
   	<script>
-		function AddTableOption() {
-			// var rowNum = $('#retireTable').bootstrapTable('totalRows');
-			var rowNum = $('#retireTable').bootstrapTable('getData').length;
-		    for(i = 0; i < rowNum; i++)
-		    {
-		    	UpdateTableCell(i, "option", '<button type="button" onclick="DoRetire();" class="btn btn-success">退休操作</button>');
-			}
-		};
-		
 		// 更新单元格内容
 		function UpdateTableCell(row, field, val){
 			// 更新表格列"option"展示变为按钮
@@ -61,28 +43,70 @@
             });			
 		};
 		
-		// 单个场次退休操作
-		function DoRetire() {
+		function operateFormatter(value, row, index) {
+        	return ['<button type="button" class="btn btn-primary">退休操作</button>'].join('');  	
+    	};
+		
+		window.operateEvents = {
+	        'click .btn': function (e, value, row, index) {
+	            alert('You click like action, row: ' + JSON.stringify(row));
+	            // 根据表格内容提交上传，上传json内容
+				$('#opform').val(JSON.stringify(row));
+				$('#retireForm').submit();
+		    	ev.preventDefault();
+	        },
+	    };
+		
+		// 所有场次退休操作
+		function DoAllRetire() {
 			var tbldata = $('#retireTable').bootstrapTable('getData');
-			tbldata.remove('option');
 			var rows = tbldata.length;
+			// 删除无用数据			
 			for(var i = 0; i < rows; i++)
 			{
-				alert(JSON.stringify(tbldata[i]));	
+				delete tbldata[i]['option'];
+				// console.log(JSON.stringify(tbldata[i]));								
 			}
-			$('#opform').val('12345678');
+			// 根据表格内容提交上传，上传json内容
+			$('#opform').val(JSON.stringify(tbldata));
 		    $('#retireForm').submit();
+		};
+		
+		function GetIdSelections() {
+	        return $.map($('#retireTable').bootstrapTable('getSelections'), function (row) {
+	            return row.id;
+	        });
+	    }
+		
+		// 单个场次退休操作
+		function DoRetire(ev) {
+			var ids = GetIdSelections();			
+			// var idx = $.map($('#retireTable').bootstrapTable('getSelections'), function(row){
+				// return row.id;
+			// });
+			// var currow = $('#retireTable').bootstrapTable('getSelections');
+			var alldata = $('#retireTable').bootstrapTable('getData');
+			var rows = alldata.length;
+			// 删除无用数据			
+			for(var i = 0; i < rows; i++)
+			{
+				delete alldata[i]['option'];
+				// console.log(JSON.stringify(tbldata[i]));								
+			}
+			// 根据表格内容提交上传，上传json内容
+			$('#opform').val(JSON.stringify(alldata));
+		    $('#retireForm').submit();
+		    ev.preventDefault();
 		};
 		
 		// 下拉框变化
 		// 所有下拉框执行同一个事件回调函数,class=".dropdown-item"
-		$(".dropdown-item").click(function(e) {			
+		$(".dropdown-item").click(function(e) {		
 			// document.getElementById('myDropdown').textContent = e.target.text;
 			$('#myDropdown').textContent = e.target.text;
-			// 提交表单获取场次信息
-			var tbldata = JSON.stringify($('#retireTable').bootstrapTable('getData'));
-			alert(tbldata);
-			$('#opform').val(tbldata);
+			// 提交表单获取场次信息key:levelswitch
+			var op = JSON.stringify({'levelswitch':e.target.text});	
+			$('#opform').val(op);
 		    $('#retireForm').submit();
 			e.preventDefault();
 		});
@@ -93,9 +117,32 @@
 			var points = JSON.parse('{{ changci|safe }}');
 			// 重新加载场次信息
 		    $('#retireTable').bootstrapTable({
-		        data: points
+		        data: points,
+		        columns: [
+		        		{
+	                        field: 'host',
+	                        title: '域名',
+	                        align: 'center',
+	                    },
+	                    {
+	                        field: 'level',
+	                        title: 'Level',
+	                        align: 'center',
+                    	},
+                    	{
+	                        field: 'playnum',
+	                        title: '在玩人数',
+	                        align: 'center',
+	                    },
+	                    {
+	                        field: 'option',
+	                        title: '操作',
+	                        align: 'center',
+	                        formatter: operateFormatter,
+	                        events: operateEvents,
+	                    }]
 		    });
-		    AddTableOption();
+		    // AddTableOption();
 		});
 	</script>
 	</div>
