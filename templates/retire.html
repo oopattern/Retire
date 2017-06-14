@@ -53,9 +53,9 @@
 	        'click .btn': function (e, value, row, index) {
 	        	e.preventDefault();
 	            // alert('You click like action, row: ' + JSON.stringify(row));
-	            var op = JSON.stringify({'retire':'onelevel'});
+	            // var op = JSON.stringify({'retire':'onelevel'});
 	            var msg = JSON.stringify(row);
-				$('#opform').val(op+msg);
+				$('#opform').val(msg);
 				$('#retireForm').submit();
 	        },
 	    };
@@ -63,9 +63,9 @@
 		// 所有场次退休操作
 		$('#allretire').on('click', function(event) {
 			event.preventDefault(); // To prevent following the link (optional)
-			var op = JSON.stringify({'retire':'allevel'});
+			// var op = JSON.stringify({'retire':'allevel'});
 			var msg = JSON.stringify($('#retireTable').bootstrapTable('getData'));
-			$('#opform').val(op+msg);
+			$('#opform').val(msg);
 		    $('#retireForm').submit();
 		    // console.log(JSON.stringify(tbldata));
 		});

@@ -2,6 +2,8 @@
 import os
 import sys
 import json
+sys.path.append('base/')
+from Socket import *
 from flask import Flask,request,render_template
 
 app = Flask(__name__)
@@ -27,36 +29,20 @@ def ShowRetire(choice=u'普通场'):
 # 处理退休表单请求
 @app.route('/retire', methods=['POST'])
 def HandleRetire():
-    allop = request.form['opform'] # dict data type, key: opform
-    return allop
-    return 'submit option no found...'
-    
-    """
-    if(allop.has_key('opform')):
-        return json.dumps(allop['opform'])
-    return 'submit option no found...'
- """
- 
-    """   
-    if(allop.has_key('retire')):
-        return json.dumps(allop)
-    elif(allop.has_key('levelswitch')):
-        return ShowRetire(allop['levelswitch'])
-    """
-
-    """
-    if(allop.has_key('allretire')):
-        return '<p>' + u'执行全部退休' + '</p>'
-    elif(allop.has_key('oneretire')):
-        return '<p>' + u'退休一个场次' + '</p>'
-    elif(allop.has_key('opmenu') and allop['opmenu'] != ''):
-        return ShowRetire(allop['opmenu'])
-    return 'submit option no found...'
-    """
+    allop = request.form['opform'] # form is dict data type, key: opform, value is unicode
+    op = json.loads(allop) # unicode to dict
+    if('levelswitch' in op):
+        return ShowRetire(op['levelswitch'])
+    return json.dumps(op) # dict to json string
     
 if __name__ =='__main__':
     print('say goodbye!')
-    app.run(host='localhost', port=8088)
+    address = ('127.0.0.1', 20000)
+    
+    s = Socket()
+    s.CreatSock(address)
+    
+#     app.run(host='localhost', port=8088)
 #     app.run(host='localhost', port=8088, debug=True)
     
     
