@@ -2,11 +2,23 @@
 import os
 import sys
 import json
-sys.path.append('base/')
-from Socket import *
+sys.path.append('base/socket')
+sys.path.append('base/protocol')
+from bysocket import *
+from packet import *
 from flask import Flask,request,render_template
 
+# 内部命令，获取gameserver信息(等级，sid，玩家人数等)
+CMD_GET_SERVER_INFO = 0X0906
+
 app = Flask(__name__)
+
+# 普通场Alloc配置
+threeland = [{"192.168.201.75":6580}, # Level60
+             {"192.168.201.75":6581}, # Level61
+             {"192.168.201.75":6582}, # Level62
+             {"192.168.201.75":6583}, # Level63
+             ]
 
 # 展示退休页面
 @app.route('/retire', methods=['GET'])
@@ -34,13 +46,21 @@ def HandleRetire():
     if('levelswitch' in op):
         return ShowRetire(op['levelswitch'])
     return json.dumps(op) # dict to json string
+
+def GetServerInfoPacket():
+    outPkg = OutPacket()
+    outPkg.Begin(CMD_GET_SERVER_INFO)
+    outPkg.End()
+    return outPkg
     
 if __name__ =='__main__':
     print('say goodbye!')
-    address = ('127.0.0.1', 20000)
-    
-    s = Socket()
+    address = ('192.168.201.75', 6580)
+    pkg = GetServerInfoPacket()
+    s = BYSocket()
     s.CreatSock(address)
+    recvbuf = s.RequestData(pkg)
+    print recvbuf.PacketListBuf()
     
 #     app.run(host='localhost', port=8088)
 #     app.run(host='localhost', port=8088, debug=True)

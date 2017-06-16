@@ -15,10 +15,10 @@ import socket
 sys.path.append('../protocol')
 from packet import *
 
-class Socket:
+class BYSocket:
     def __init__(self):
         self.m_socket = None
-        self.m_Cache = ''
+        self.m_Cache = []
         self.m_PacketParser = CPacketParser()
         pass
 
@@ -33,7 +33,8 @@ class Socket:
         if encrpyt is True:
             self.m_socket.send(packet.PacketListBuf())
         else:
-            self.m_socket.send(packet.PacketListBuf())
+            send_buf = ''.join(packet.PacketListBuf())
+            self.m_socket.send(send_buf)
         buf = self.m_socket.recv(1024)
         if buf == ' ':
             print 'buf is None'

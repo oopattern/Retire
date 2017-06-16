@@ -1,4 +1,7 @@
 eclipse.preferences.version=1
+encoding//base/protocol/log.py=utf-8
 encoding//base/protocol/packet.py=utf-8
-encoding//base/socket/socket.py=utf-8
+encoding//base/protocol/protocol.py=utf-8
+encoding//base/protocol/singleton.py=utf-8
+encoding//base/socket/bysocket.py=utf-8
 encoding/retire.py=utf-8
