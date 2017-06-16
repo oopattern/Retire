@@ -71,16 +71,18 @@ def GetServerInfo(addrTbl):
         s.CreatSock(item)
         inPkg = s.RequestData(outPkg)
         # 解包
-        cmd = hex(inPkg.GetCmd())
-        level = inPkg.ReadInt32()
-        usercount = inPkg.ReadInt32()
-        gameip = inPkg.ReadString()
-        gameport = inPkg.ReadInt32()
-        retirestat = inPkg.ReadInt32()
-        gameip = gameip[:gameip.index('\x00')] # 删除空白字符 \u000
-        # 和html的字段格式相匹配
-        msg.append({"host":gameip, "level":level, "playnum":usercount})
-        # print 'cmd[%s] level[%s] usercount[%s] gameip[%s] gameport[%s] retire_stat[%s]' % (cmd,level,usercount,gameip,gameport,retirestat)
+        if(inPkg.GetCmd() == CMD_GET_SERVER_INFO):
+            num = inPkg.ReadInt32()
+            for var in range(num):
+                level = inPkg.ReadInt32()
+                usercount = inPkg.ReadInt32()
+                gameip = inPkg.ReadString()
+                gameport = inPkg.ReadInt32()
+                retirestat = inPkg.ReadInt32()
+                gameip = gameip[:gameip.index('\x00')] # 删除空白字符 \u000
+                # 和html的字段格式相匹配
+                msg.append({"host":gameip, "level":level, "playnum":usercount})
+                # print 'cmd[%s] level[%s] usercount[%s] gameip[%s] gameport[%s] retire_stat[%s]' % (cmd,level,usercount,gameip,gameport,retirestat)
     return msg
 
     
