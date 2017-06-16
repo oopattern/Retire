@@ -17,8 +17,8 @@
   	<form action='/retire' id="retireForm" method="post">
   		<!-- Example single danger button -->
 		<div class="btn-group">
-		<button id="myDropdown" type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-			普通场
+		<button id="myDropdown" type="button" class="btn btn-danger btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			{{ title }}
 		</button>
 		  	<div class="dropdown-menu" >
 		    <a class="dropdown-item" href="#">普通场</a>
@@ -73,7 +73,7 @@
 		// 场次切换: 所有下拉框执行同一个事件回调函数,class=".dropdown-item"
 		$(".dropdown-item").click(function(e) {		
 			// document.getElementById('myDropdown').textContent = e.target.text;
-			$('#myDropdown').textContent = e.target.text;
+			// $('#myDropdown').textContent = e.target.text;
 			// 提交表单获取场次信息key:levelswitch
 			var op = JSON.stringify({'levelswitch':e.target.text});
 			$('#opform').val(op);
