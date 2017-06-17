@@ -2,6 +2,7 @@
 import os
 import sys
 import json
+from sets import Set
 sys.path.append('base/socket')
 sys.path.append('base/protocol')
 from bysocket import BYSocket
@@ -46,6 +47,7 @@ def ShowRetire(choice=u'普通场'):
                 u'双癞子场': doublelaizi,
                 u'四人场': fourland}
     op = GetServerInfo(allLevel[choice])
+#     return json.dumps(op)
     return render_template('retire.html', title=choice, changci=json.dumps(op))
     
 # 处理退休表单请求
@@ -60,13 +62,15 @@ def HandleRetire():
 
 # 请求Alloc获取场次信息
 def GetServerInfo(addrTbl):
-    msg = []
+    msg = [] # all level and all group
+    uniLevel = [] # unique level
+    # 每个Level发送一个alloc命令
     for item in addrTbl:
         # 组包
         outPkg = OutPacket()
         outPkg.Begin(CMD_GET_SERVER_INFO)
         outPkg.End()
-        # 发包 & 收包
+        # 发包 &收包
         s = BYSocket()
         s.CreatSock(item)
         inPkg = s.RequestData(outPkg)
@@ -74,6 +78,7 @@ def GetServerInfo(addrTbl):
         if(inPkg.GetCmd() == CMD_GET_SERVER_INFO):
             num = inPkg.ReadInt32()
             for var in range(num):
+                grpidx = inPkg.ReadInt32()
                 level = inPkg.ReadInt32()
                 usercount = inPkg.ReadInt32()
                 gameip = inPkg.ReadString()
@@ -81,12 +86,49 @@ def GetServerInfo(addrTbl):
                 retirestat = inPkg.ReadInt32()
                 gameip = gameip[:gameip.index('\x00')] # 删除空白字符 \u000
                 # 和html的字段格式相匹配
-                msg.append({"host":gameip, "level":level, "playnum":usercount})
+                uniLevel.append(level)
+                msg.append({"host":gameip, "level":level, "group"+str(grpidx):usercount})
                 # print 'cmd[%s] level[%s] usercount[%s] gameip[%s] gameport[%s] retire_stat[%s]' % (cmd,level,usercount,gameip,gameport,retirestat)
-    return msg
+    msg.append({'host': '192.168.201.75', 'level': 60, 'group1': 24})
+    msg.append({'host': '192.168.201.75', 'level': 60, 'group2': 33})
+    msg.append({'host': '192.168.201.75', 'level': 60, 'group2': 17})
+    msg.append({'host': '192.168.201.75', 'level': 61, 'group1': 135})
+    msg.append({'host': '192.168.201.75', 'level': 61, 'group2': 48})
+    msg.append({'host': '192.168.201.75', 'level': 61, 'group2': 31})
+    msg.append({'host': '192.168.201.75', 'level': 62, 'group1': 23})
+    msg.append({'host': '192.168.201.75', 'level': 62, 'group2': 129})
+    msg.append({'host': '192.168.201.75', 'level': 2501, 'group1': 346})
+    msg.append({'host': '192.168.201.75', 'level': 5001, 'group2': 478})
+    # 校验1：同一个group的退休状态必须相同
+    # 校验2：同一个level必须有Group1和Group2
+    # 根据level和group index合并计算usercount的数目
+    show = []
+    uniLevel = list(set(uniLevel))
+    for level in uniLevel:
+        tmp = {}
+        for item in msg:
+            if level == item['level']:
+                if tmp == {}:
+                    tmp = {"host":item['host'], "level":item['level'], "group1":0, "group2":0}
+                if item.has_key('group1'):
+                    tmp['group1'] += item['group1']
+                if item.has_key('group2'):
+                    tmp['group2'] += item['group2']
+        show.append(tmp)
+    # sort by level
+    show = sorted(show, cmp=lambda x,y : cmp(x['level'], y['level'])) 
+    for item in show:
+        print item
+    # 重新构造显示的html内容
+    return show
 
     
 if __name__ =='__main__':
     print('say goodbye!')
+#     engineers = Set([("host","level")])
+#     print engineers
+#     for item in engineers:
+#         print item
+    
     app.run(host='localhost', port=8088)
     
