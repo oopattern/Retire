@@ -11,6 +11,10 @@
     <script src="static/js/bootstrap-table.min.js"></script>
     <!-- Own JavaScript -->
     <!-- <script src="static/js/ownjs/retire.js"></script> -->
+   	<!-- css -->
+    <style media="screen" type="text/css">
+		input[type='radio'] { transform: scale(2.5); }
+	</style>
 	</head>
 <body>
 	<div class="container">
@@ -47,7 +51,7 @@
 		function operateFormatter(value, row, index) {
         	return ['<button type="button" class="btn btn-success">退休操作</button>'].join('');  	
     	};
-	
+    	
 		// 单个场次退休操作	
 		window.operateEvents = {
 	        'click .btn': function (e, value, row, index) {
@@ -101,12 +105,16 @@
                     	},
                     	{
 	                        field: 'group1',
-	                        title: 'Group1',
+	                        title: ['Group1',
+	                        		'&nbsp;&nbsp;&nbsp;&nbsp;',
+	                        		'<input type="radio" id="group1" name="retiregroup" />'].join(''),
 	                        align: 'center',
 	                    },
 	                    {
 	                        field: 'group2',
-	                        title: 'Group2',
+	                        title: ['Group2',
+	                        		'&nbsp;&nbsp;&nbsp;&nbsp;',
+	                        		'<input type="radio" id="group2" name="retiregroup" />'].join(''),
 	                        align: 'center',
 	                    },
 	                    {

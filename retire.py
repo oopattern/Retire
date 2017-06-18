@@ -102,6 +102,8 @@ def GetServerInfo(addrTbl):
     # 校验1：同一个group的退休状态必须相同
     # 校验2：同一个level必须有Group1和Group2
     # 根据level和group index合并计算usercount的数目
+    for item in msg:
+        print item
     show = []
     uniLevel = list(set(uniLevel))
     for level in uniLevel:
@@ -125,10 +127,5 @@ def GetServerInfo(addrTbl):
     
 if __name__ =='__main__':
     print('say goodbye!')
-#     engineers = Set([("host","level")])
-#     print engineers
-#     for item in engineers:
-#         print item
-    
     app.run(host='localhost', port=8088)
     
