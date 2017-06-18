@@ -66,13 +66,25 @@
             });			
 		};
 		
-		// 初始化设置按钮的列
-		function operateFormatter(value, row, index) {
-        	return ['<button type="button" class="btn btn-success">退休操作</button>'].join('');  	
+		// 初始化 退休操作
+		function OperateFormatter(value, row, index) {
+        	return ['<button type="button" class="btn btn-success">退休操作</button>'].join('');
     	};
     	
+    	// 初始化 取消退休
+    	function OperateCancelFormatter(value, row, index) {
+        	return ['<button type="button" class="btn btn-primary">取消退休</button>'].join('');  	
+    	};
+    	
+    	// 初始化组的列(玩家人数和退休状态)
+    	function GroupFormatter(value, row, index) {
+    		var user = value['usercount'];
+    		var stat = ((value['stat'] == 1) ? "正在退休" : "未退休");
+    		return user.toString() + ' ' + stat;
+    	}
+    	
 		// 单个场次退休操作	
-		window.operateEvents = {
+		window.OperateEvents = {
 	        'click .btn': function (e, value, row, index) {
 	        	e.preventDefault();
 	            // alert('You click like action, row: ' + JSON.stringify(row));
@@ -118,6 +130,23 @@
 			e.preventDefault();
 		});
 		
+		// group切换，根据切换group时根据退休状态切换操作按钮显示
+		// $("input[name=retiregroup]").change(function () {});
+		function SelectGroup(e) {
+			// e.preventDefault();
+			var group = e.target.value;
+			var alldata = $('#retireTable').bootstrapTable('getData');
+			var rowsize = alldata.length;			
+			alert(JSON.stringify(alldata));
+			for(var i = 0; i < rowsize; i++) {
+				// 根据组当前状态修改操作选项
+				var stat = alldata[i]['group'+group.toString()]['stat'];
+				var act = ((stat == 1) ? OperateCancelFormatter() : OperateFormatter());
+				UpdateTableCell(i, 'option', act);
+			}
+			$('#retireTable').bootstrapTable('refresh');
+		};
+		
 		// 表格展示
 		$(function InitTable() {
 			// 引用html变量changci
@@ -140,22 +169,24 @@
 	                        field: 'group1',
 	                        title: ['Group1',
 	                        		'&nbsp;&nbsp;&nbsp;&nbsp;',
-	                        		'<input type="radio" name="retiregroup" value="1" />'].join(''),
+	                        		'<input type="radio" name="retiregroup" value="1" onclick="SelectGroup(event);" />'].join(''),
 	                        align: 'center',
+	                        formatter: GroupFormatter,
 	                    },
 	                    {
 	                        field: 'group2',
 	                        title: ['Group2',
 	                        		'&nbsp;&nbsp;&nbsp;&nbsp;',
-	                        		'<input type="radio" name="retiregroup" value="2" />'].join(''),
+	                        		'<input type="radio" name="retiregroup" value="2" onclick="SelectGroup(event);" />'].join(''),
 	                        align: 'center',
+	                        formatter: GroupFormatter,
 	                    },
 	                    {
 	                        field: 'option',
 	                        title: 'Option',
 	                        align: 'center',
-	                        formatter: operateFormatter,
-	                        events: operateEvents,
+	                        formatter: OperateFormatter,
+	                        events: OperateEvents,
 	                    }]
 		    });
 		});

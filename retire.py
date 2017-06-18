@@ -175,12 +175,20 @@ def GetServerInfo(addrTbl):
             if level == item['level']:
                 if tmp == {}:
                     tmp = {"host":item['host'], 
-                           "level":item['level'], 
-                           "group1":{"usercount":0,"stat":item['group1']['stat']}, 
-                           "group2":{"usercount":0,"stat":item['group1']['stat']}}
+                           "level":item['level'],
+                           "group1":{"usercount":0,"stat":-1}, 
+                           "group2":{"usercount":0,"stat":-1}}
                 if item.has_key('group1'):
+                    # 初始化group1退休状态
+                    if tmp['group1']['stat'] == -1: 
+                        tmp['group1']['stat'] = item['group1']['stat']
+                    # 计算group1的玩家人数
                     tmp['group1']['usercount'] += item['group1']['usercount']
                 if item.has_key('group2'):
+                    # 初始化group2退休状态
+                    if tmp['group2']['stat'] == -1:
+                        tmp['group2']['stat'] = item['group2']['stat']
+                    # 计算group2的玩家人数
                     tmp['group2']['usercount'] += item['group2']['usercount']
         show.append(tmp)
     # sort by level
