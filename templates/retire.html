@@ -18,7 +18,7 @@
 	</head>
 <body>
 	<div class="container">
-  	<form action='/retire' id="retireForm" method="post">
+  	<form action='/retire' id="retireForm" method="post" onsubmit="return ValidRetireForm();">
   		<!-- Example single danger button -->
 		<div class="btn-group">
 		<button id="myDropdown" type="button" class="btn btn-danger btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -37,6 +37,25 @@
     	<button type="button" id="allretire" class="btn btn-primary btn-lg">全部退休</button>
   	</form>
   	<script>
+  		// 检查表单提交是否合法
+  		function ValidRetireForm() {
+  			// get all submit val, Json str to Json obj
+  			var op = $('#opform').val();
+  			var obj = JSON.parse($('#opform').val()); 
+  			if('retiremenu' in obj) {
+  				// 退休操作必须选择组，Group1或者Group2
+  				if(obj['group'] == undefined) {
+  					alert('退休操作：请选择退休组号!');
+  					return false;
+  				}
+  				// 提示用户确认退休操作
+  				else {
+  					return confirm(op);
+  				}
+  			}
+  			return true;
+  		};
+  	
 		// 更新单元格内容
 		function UpdateTableCell(row, field, val){
 			// 更新表格列"option"展示变为按钮
@@ -57,9 +76,11 @@
 	        'click .btn': function (e, value, row, index) {
 	        	e.preventDefault();
 	            // alert('You click like action, row: ' + JSON.stringify(row));
-	            // var op = JSON.stringify({'retire':'onelevel'});
-	            var msg = JSON.stringify(row);
-				$('#opform').val(msg);
+	            var group = $('input[name=retiregroup]:checked', '#retireForm').val();
+	            var menu = $('#myDropdown').text();
+	            menu = menu.replace(/\s/g, '');  // remove space
+	            var op = JSON.stringify({'retiremenu':menu,'group':group,'level':row['level']});
+				$('#opform').val(op);
 				$('#retireForm').submit();
 	        },
 	    };
@@ -107,14 +128,14 @@
 	                        field: 'group1',
 	                        title: ['Group1',
 	                        		'&nbsp;&nbsp;&nbsp;&nbsp;',
-	                        		'<input type="radio" id="group1" name="retiregroup" />'].join(''),
+	                        		'<input type="radio" name="retiregroup" value="group1" />'].join(''),
 	                        align: 'center',
 	                    },
 	                    {
 	                        field: 'group2',
 	                        title: ['Group2',
 	                        		'&nbsp;&nbsp;&nbsp;&nbsp;',
-	                        		'<input type="radio" id="group2" name="retiregroup" />'].join(''),
+	                        		'<input type="radio" name="retiregroup" value="group2" />'].join(''),
 	                        align: 'center',
 	                    },
 	                    {
