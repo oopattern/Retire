@@ -12,8 +12,11 @@
 #--------------------------------------------------
 import sys
 import socket
+import select
 sys.path.append('../protocol')
 from packet import *
+
+RECV_TIMEOUT_SEC = 2 # 接收超时时间，单位秒
 
 class BYSocket:
     def __init__(self):
@@ -35,18 +38,23 @@ class BYSocket:
         else:
             send_buf = ''.join(packet.PacketListBuf())
             self.m_socket.send(send_buf)
-        buf = self.m_socket.recv(1024)
-        if buf == ' ':
-            print 'buf is None'
-            return None
-        else:
-            self.m_Cache.extend(list(buf))
-            packet_len = self.m_PacketParser.ParsePacket(self.m_Cache)
-            if packet_len < 0:
-                print 'len < 0'
+        self.m_socket.setblocking(0)
+        ready = select.select([self.m_socket], [], [], RECV_TIMEOUT_SEC)
+        if ready[0]:
+            buf = self.m_socket.recv(1024)
+            if buf == ' ':
+                print 'buf is None'
                 return None
             else:
-                input_pkg = InputPacket()
-                input_pkg.CopyFromListBuf(self.m_Cache[0:packet_len])
-                self.m_socket.close()
-                return input_pkg
+                self.m_Cache.extend(list(buf))
+                packet_len = self.m_PacketParser.ParsePacket(self.m_Cache)
+                if packet_len < 0:
+                    print 'len < 0'
+                    return None
+                else:
+                    input_pkg = InputPacket()
+                    input_pkg.CopyFromListBuf(self.m_Cache[0:packet_len])
+                    self.m_socket.close()
+                    return input_pkg
+        else:
+            return None

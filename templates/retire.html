@@ -76,10 +76,12 @@
 	        'click .btn': function (e, value, row, index) {
 	        	e.preventDefault();
 	            // alert('You click like action, row: ' + JSON.stringify(row));
+	            var leveltbl = [row['level']];
 	            var group = $('input[name=retiregroup]:checked', '#retireForm').val();
 	            var menu = $('#myDropdown').text();
 	            menu = menu.replace(/\s/g, '');  // remove space
-	            var op = JSON.stringify({'retiremenu':menu,'group':group,'level':row['level']});
+	            // submit value
+	            var op = JSON.stringify({'retiremenu':menu,'action':1,'group':group,'level':leveltbl});
 				$('#opform').val(op);
 				$('#retireForm').submit();
 	        },
@@ -89,8 +91,18 @@
 		$('#allretire').on('click', function(event) {
 			event.preventDefault(); // To prevent following the link (optional)
 			// var op = JSON.stringify({'retire':'allevel'});
-			var msg = JSON.stringify($('#retireTable').bootstrapTable('getData'));
-			$('#opform').val(msg);
+			var alldata = $('#retireTable').bootstrapTable('getData');
+			var rowsize = alldata.length;
+			var leveltbl = [];
+			for(var i = 0; i < rowsize; i++) {
+				leveltbl.push(alldata[i]['level']);	
+			}
+			var group = $('input[name=retiregroup]:checked', '#retireForm').val();
+			var menu = $('#myDropdown').text();
+	       	menu = menu.replace(/\s/g, '');  // remove space
+	       	// submit value
+	       	var op = JSON.stringify({'retiremenu':menu,'action':1,'group':group,'level':leveltbl});
+			$('#opform').val(op);
 		    $('#retireForm').submit();
 		    // console.log(JSON.stringify(tbldata));
 		});
@@ -128,14 +140,14 @@
 	                        field: 'group1',
 	                        title: ['Group1',
 	                        		'&nbsp;&nbsp;&nbsp;&nbsp;',
-	                        		'<input type="radio" name="retiregroup" value="group1" />'].join(''),
+	                        		'<input type="radio" name="retiregroup" value="1" />'].join(''),
 	                        align: 'center',
 	                    },
 	                    {
 	                        field: 'group2',
 	                        title: ['Group2',
 	                        		'&nbsp;&nbsp;&nbsp;&nbsp;',
-	                        		'<input type="radio" name="retiregroup" value="group2" />'].join(''),
+	                        		'<input type="radio" name="retiregroup" value="2" />'].join(''),
 	                        align: 'center',
 	                    },
 	                    {
