@@ -34,7 +34,8 @@
 		</div>
         <table id="retireTable" data-click-to-select="true" ></table>
     	<input type="hidden" id="opform" name="opform" value={{request.form['opform']}}>
-    	<button type="button" id="allretire" class="btn btn-primary btn-lg" value="1">全部退休</button>
+    	<button type="button" class="btn btn-primary btn-lg" value="1" onclick="OperateAllRetire(event);">全部退休</button>
+    	<button type="button" class="btn btn-primary btn-lg" value="0" onclick="OperateAllRetire(event);">取消全部</button>
   	</form>
   	<script>
   		// 检查表单提交是否合法
@@ -75,12 +76,12 @@
 		
 		// 初始化 退休操作
 		function OperateFormatter(value, row, index) {
-        	return ['<button type="button" class="btn btn-success" value="1" onclick="OperateRetire(event);">退休操作</button>'].join('');
+        	return ['<button type="button" class="btn btn-danger" value="1" onclick="OperateRetire(event);">退休操作</button>'].join('');
     	};
     	
     	// 初始化 取消退休
     	function OperateCancelFormatter(value, row, index) {
-        	return ['<button type="button" class="btn btn-primary" value="0" onclick="OperateRetire(event);">取消退休</button>'].join('');  	
+        	return ['<button type="button" class="btn btn-success" value="0" onclick="OperateRetire(event);">取消退休</button>'].join('');  	
     	};
     	    	
     	// 单个场次-退休操作/取消退休
@@ -94,6 +95,15 @@
     		var group = $('input[name=retiregroup]:checked', '#retireForm').val();
     		var menu = $('#myDropdown').text();
     		menu = menu.replace(/\s/g, '');  // remove space
+    		if(action == '1') {
+    			// 不能2组同时退休
+    			var g1_stat = ((alldata[rowIdx-1]['group1']['stat'] == 1) || (group == '1'));
+    			var g2_stat = ((alldata[rowIdx-1]['group2']['stat'] == 1) || (group == '2'));
+    			if(g1_stat && g2_stat) {
+    				alert('Group1和Group2不能同时退休!!!');
+    				return;
+    			}
+    		}    		
     		// submit value
 	       	var op = JSON.stringify({'retiremenu':menu,'action':action,'group':group,'level':leveltbl});
     		$('#opform').val(op);
@@ -101,7 +111,9 @@
     	};
     	
 		// 所有场次退休操作
-		$('#allretire').on('click', function(event) {
+		// $('#allretire').on('click', function(event) {
+		// $('.btn btn-primary btn-lg allretire').on('click', function(event) {
+		function OperateAllRetire(event) {
 			event.preventDefault(); // To prevent following the link (optional)
 			// var op = JSON.stringify({'retire':'allevel'});
 			var action = event.target.value;
@@ -114,12 +126,23 @@
 			var group = $('input[name=retiregroup]:checked', '#retireForm').val();
 			var menu = $('#myDropdown').text();
 	       	menu = menu.replace(/\s/g, '');  // remove space
+	       	if(action == '1') {
+	       		for(var i = 0; i < rowsize; i++) {
+					// 不能2组同时退休
+	    			var g1_stat = ((alldata[i]['group1']['stat'] == 1) || (group == '1'));
+	    			var g2_stat = ((alldata[i]['group2']['stat'] == 1) || (group == '2'));
+	    			if(g1_stat && g2_stat) {
+	    				alert('Group1和Group2不能同时退休!!!');
+	    				return;
+	    			}
+	       		}
+    		}
 	       	// submit value
 	       	var op = JSON.stringify({'retiremenu':menu,'action':action,'group':group,'level':leveltbl});
 			$('#opform').val(op);
 		    $('#retireForm').submit();
 		    // console.log(JSON.stringify(tbldata));
-		});
+		};
 		
 		// 场次切换: 所有下拉框执行同一个事件回调函数,class=".dropdown-item"
 		$(".dropdown-item").click(function(e) {		
