@@ -87,7 +87,7 @@ def HandleRetire():
 def SetRetireServer(op):
     result = 0 # 0:none, 1:success, -1:failed
     leveltbl = op['level']
-    action = op['action']
+    action = int(op['action'])
     group = int(op['group'])
     for item in allLevel[op['retiremenu']]:
         # 组包 - 协议和alloc对应
