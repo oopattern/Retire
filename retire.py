@@ -2,7 +2,7 @@
 import os
 import sys
 import json
-from sets import Set
+import platform
 sys.path.append('base/socket')
 sys.path.append('base/protocol')
 from bysocket import BYSocket
@@ -198,8 +198,35 @@ def GetServerInfo(addrTbl):
     # 重新构造显示的html内容
     return show
 
-    
+# 守护进程
+def Daemonize():
+    try:
+        pid = os.fork()
+        if pid > 0:
+            sys.exit(0)  # first parent out
+    except OSError, e:
+        sys.stderr.write("fork #1 failed: (%d) %s\n" % (e.errno, e.strerror))
+        sys.exit(1)
+    #os.chdir("/")
+    #os.umask(0)
+    os.setsid()
+
+    for f in sys.stdout, sys.stderr:
+        f.flush()
+    si = file('/dev/null', 'r')
+    so = file('/dev/null', 'w')
+    se = file('/dev/null', 'w')
+    os.dup2(si.fileno(), sys.stdin.fileno())
+    os.dup2(so.fileno(), sys.stdout.fileno())
+    os.dup2(se.fileno(), sys.stderr.fileno())
+
 if __name__ =='__main__':
     print('say goodbye!')
-    app.run(host='localhost', port=8088)
+    if (platform.system() != "Windows"):
+        Daemonize()
+        print('run web server')
+        app.run(host='192.168.201.94', port=9999)
+    else:
+        print('run web server')
+        app.run(host='localhost', port=9999)
     
