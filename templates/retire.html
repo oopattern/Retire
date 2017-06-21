@@ -14,6 +14,18 @@
    	<!-- css -->
     <style media="screen" type="text/css">
 		input[type='radio'] { transform: scale(2.5); }
+		p.onretired {
+			font-family:Times New Roman;
+			font-size:12px;
+			color:red;
+			white-space:pre-wrap;
+		}
+		p.cancelretired {
+			font-family:Times New Roman;
+			font-size:12px;
+			color:gray;
+			white-space:pre-wrap;
+		}
 	</style>
 	</head>
 <body>
@@ -70,8 +82,8 @@
 		// 初始化组的列(玩家人数和退休状态)
     	function GroupFormatter(value, row, index) {
     		var user = value['usercount'];
-    		var stat = ((value['stat'] == 1) ? "正在退休" : "未退休");
-    		return user.toString() + ' ' + stat;
+    		var stat = ((value['stat'] == 1) ? '<p class="onretired" >已退休</p>' : '<p class="cancelretired" >未退休</p>');
+    		return user.toString() + stat;
     	}
 		
 		// 初始化 退休操作
