@@ -56,7 +56,7 @@
   			// get all submit val, Json str to Json obj
   			var op = $('#opform').val();
   			var obj = JSON.parse($('#opform').val()); 
-  			if('retiremenu' in obj) {
+  			if(('retiremenu' in obj) || ('exitmenu' in obj)) {
   				// 退休操作必须选择组，Group1或者Group2
   				if(obj['group'] == undefined) {
   					alert('退休操作：请选择退休组号!');
@@ -69,6 +69,19 @@
   			}
   			return true;
   		};
+  		
+  		function TimeConverter(UNIX_timestamp) {
+			var a = new Date(UNIX_timestamp * 1000);
+  			var months = ['1','2','3','4','5','6','7','8','9','10','11','12'];
+  			var year = a.getFullYear();
+  			var month = months[a.getMonth()];
+  			var date = a.getDate();
+  			var hour = a.getHours();
+  			var min = a.getMinutes();
+  			var sec = a.getSeconds();
+  			var time = year + '/' + month + '/' + date + '    ' + hour + ':' + min + ':' + sec;
+  			return time;
+		}
   	
 		// 更新单元格内容
 		function UpdateTableCell(row, field, val){
@@ -84,7 +97,8 @@
     	function GroupFormatter(value, row, index) {
     		var user = value['usercount'];
     		var stat = ((value['stat'] == 1) ? '<p class="onretired" >已退休</p>' : '<p class="cancelretired" >未退休</p>');
-    		return user.toString() + stat;
+    		var starttime = '<p class="cancelretired" >' + '启动时间:' + TimeConverter(value['starttime']) + '</p>';
+    		return user.toString() + stat + starttime;
     	}
     	
     	// 初始化 退出操作
@@ -128,12 +142,6 @@
 			$('#retireForm').submit();
     	};
     	
-    	// 单个场次-关闭进程
-    	function ExitProcess(e) {
-    		// 没有退休的场次不能关闭进程
-    		var rowIdx = e.target.parentNode.parentNode.rowIndex; // start with 1 to ...
-    	};
-    	
 		// 所有场次退休操作
 		// $('#allretire').on('click', function(event) {
 		// $('.btn btn-primary btn-lg allretire').on('click', function(event) {
@@ -167,6 +175,59 @@
 		    $('#retireForm').submit();
 		    // console.log(JSON.stringify(tbldata));
 		};
+		
+		// 单个场次-关闭进程
+    	function ExitProcess(e) {
+    		e.preventDefault();
+    		// 没有退休的场次不能关闭进程
+    		var rowIdx = e.target.parentNode.parentNode.rowIndex; // start with 1 to ...
+    		var alldata = $('#retireTable').bootstrapTable('getData');
+    		var leveltbl = [alldata[rowIdx-1]['level']]; // make a array
+    		var action = event.target.value;
+    		var group = $('input[name=retiregroup]:checked', '#retireForm').val();
+    		var menu = $('#myDropdown').text();
+    		menu = menu.replace(/\s/g, '');  // remove space
+    		// 如果有人数则不能退出进程
+    		var usercount = alldata[rowIdx-1]['group'+group]['usercount'];
+    		var stat = alldata[rowIdx-1]['group'+group]['stat'];
+    		if((stat != 1) || (usercount > 10)) {
+    			alert('Group未退休或者在玩人数较多，不能关闭进程');
+    			return;
+    		}    		
+    		// submit value
+	       	var op = JSON.stringify({'exitmenu':menu,'action':action,'group':group,'level':leveltbl});
+    		$('#opform').val(op);
+			$('#retireForm').submit();
+    	};
+    	
+    	// 所有场次 -关闭进程
+    	function ExitAllProcess(e) {
+    		event.preventDefault(); // To prevent following the link (optional)
+			// var op = JSON.stringify({'retire':'allevel'});
+			var action = event.target.value;
+			var alldata = $('#retireTable').bootstrapTable('getData');
+			var rowsize = alldata.length;
+			var leveltbl = [];
+			for(var i = 0; i < rowsize; i++) {
+				leveltbl.push(alldata[i]['level']);	
+			}
+			var group = $('input[name=retiregroup]:checked', '#retireForm').val();
+			var menu = $('#myDropdown').text();
+	       	menu = menu.replace(/\s/g, '');  // remove space
+			// 如果有人数则不能退出进程
+			for(var i = 0; i < rowsize; i++) {
+				var usercount = alldata[i]['group'+group]['usercount'];
+    			var stat = alldata[i]['group'+group]['stat'];
+    			if((stat != 1) || (usercount > 10)) {
+	    			alert('Group未退休或者在玩人数较多，不能关闭进程');
+	    			return;
+	    		}
+			}       	
+	       	// submit value
+	       	var op = JSON.stringify({'exitmenu':menu,'action':action,'group':group,'level':leveltbl});
+    		$('#opform').val(op);
+			$('#retireForm').submit(); 	
+    	};
 		
 		// 场次切换: 所有下拉框执行同一个事件回调函数,class=".dropdown-item"
 		$(".dropdown-item").click(function(e) {		

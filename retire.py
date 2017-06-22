@@ -10,8 +10,10 @@ from packet import OutPacket
 from flask import Flask,request,render_template
 
 OPTION_RETIRE_KEY = "sys_key_retire_alloc" # 退休操作码校验
+OPTION_EXIT_KEY = "sys_key_exit_game" # 退出进程操作码校验
 CMD_GET_SERVER_INFO = 0x0906 # 内部命令，获取gameserver信息(等级，sid，玩家人数等)
 CMD_SET_SERVER_RETIRED_WEB = 0x0907 # 内部命令(web控制后台使用)，将系统retire
+CMD_REQUEST_EXIT_SERVER = 0x908 # 内部命令(web控制后台使用)，通知Alloc退出Game进程
 
 
 app = Flask(__name__)
@@ -81,7 +83,55 @@ def HandleRetire():
         # 重新展示页面
         return ShowRetire(op['retiremenu'], htmlLog)
 #         return json.dumps(op) # dict to json string
+    # 关闭进程
+    elif('exitmenu' in op):
+        print(op)
+        ret = RequestExitServer(op)
+        if ret == 1:
+            tip = u'<p>操作成功</p>'
+        elif ret == 0:
+            tip = u'<p>无操作</p>'
+        else:
+            tip = u'<p>操作失败，未退休或者玩家人数过多</p>'
+        htmlLog = json.dumps(op) + tip
+        # 重新展示页面
+        return ShowRetire(op['exitmenu'], htmlLog)
     return 'command not found'
+
+# 请求Alloc退出进程
+def RequestExitServer(op):
+    result = 0 # 0:none, 1:success, -1:failed
+    leveltbl = op['level']
+    group = int(op['group'])
+    for item in allLevel[op['exitmenu']]:
+        # 组包 - 协议和alloc对应
+        outPkg = OutPacket()
+        outPkg.Begin(CMD_REQUEST_EXIT_SERVER)
+        outPkg.WriteString(OPTION_EXIT_KEY)
+        outPkg.WriteInt32(group)
+        outPkg.WriteInt32(len(leveltbl))
+        for var in leveltbl:
+            outPkg.WriteInt32(var)
+        outPkg.End()
+        # 发包 &收包
+        s = BYSocket()
+        s.CreatSock(item)
+        inPkg = s.RequestData(outPkg)
+        # 解包
+        if inPkg == None:
+            print("SetRetireServer no response")
+        elif(inPkg.GetCmd() == CMD_REQUEST_EXIT_SERVER):
+            ret = inPkg.ReadInt32() # read short -1 turn to 65535, so use int
+            # 其中一个执行失败也返回失败
+            if ret < 0:
+                return -1
+            # 无操作
+            elif ret == 0:
+                continue
+            # 其中一个执行成功
+            elif ret == 1:
+                result = 1
+    return result
 
 # 请求Alloc执行退休
 def SetRetireServer(op):
@@ -147,21 +197,22 @@ def GetServerInfo(addrTbl):
                 gameip = inPkg.ReadString()
                 gameport = inPkg.ReadInt32()
                 retirestat = inPkg.ReadInt32()
+                starttime = inPkg.ReadInt32() # 获取进程启动时间，根据最小启动时间判断程序是否更新完毕
                 gameip = gameip[:gameip.index('\x00')] # 删除空白字符 \u000
                 # 和html的字段格式相匹配
                 uniLevel.append(level)
-                msg.append({"host":gameip, "level":level, "group"+str(grpidx):{"usercount":usercount,"stat":retirestat}})        
+                msg.append({"host":gameip, "level":level, "group"+str(grpidx):{"usercount":usercount,"stat":retirestat,"starttime":starttime}})        
                 # print 'cmd[%s] level[%s] usercount[%s] gameip[%s] gameport[%s] retire_stat[%s]' % (cmd,level,usercount,gameip,gameport,retirestat)
-    msg.append({'host': '192.168.201.75', 'level': 60, 'group1': {"usercount":24,"stat":0}})
-    msg.append({'host': '192.168.201.75', 'level': 60, 'group2': {"usercount":33,"stat":0}})
-    msg.append({'host': '192.168.201.75', 'level': 60, 'group2': {"usercount":17,"stat":0}})
-    msg.append({'host': '192.168.201.75', 'level': 61, 'group1': {"usercount":135,"stat":0}})
-    msg.append({'host': '192.168.201.75', 'level': 61, 'group2': {"usercount":48,"stat":0}})
-    msg.append({'host': '192.168.201.75', 'level': 61, 'group2': {"usercount":31,"stat":0}})
-    msg.append({'host': '192.168.201.75', 'level': 62, 'group1': {"usercount":23,"stat":0}})
-    msg.append({'host': '192.168.201.75', 'level': 62, 'group2': {"usercount":129,"stat":0}})
-    msg.append({'host': '192.168.201.75', 'level': 2501, 'group1': {"usercount":346,"stat":0}})
-    msg.append({'host': '192.168.201.75', 'level': 5001, 'group2': {"usercount":478,"stat":0}})
+    msg.append({'host': '192.168.201.75', 'level': 60, 'group1': {"usercount":24,"stat":0,"starttime":sys.maxint}})
+    msg.append({'host': '192.168.201.75', 'level': 60, 'group2': {"usercount":33,"stat":0,"starttime":sys.maxint}})
+    msg.append({'host': '192.168.201.75', 'level': 60, 'group2': {"usercount":17,"stat":0,"starttime":sys.maxint}})
+    msg.append({'host': '192.168.201.75', 'level': 61, 'group1': {"usercount":135,"stat":0,"starttime":sys.maxint}})
+    msg.append({'host': '192.168.201.75', 'level': 61, 'group2': {"usercount":48,"stat":0,"starttime":sys.maxint}})
+    msg.append({'host': '192.168.201.75', 'level': 61, 'group2': {"usercount":31,"stat":0,"starttime":sys.maxint}})
+    msg.append({'host': '192.168.201.75', 'level': 62, 'group1': {"usercount":23,"stat":0,"starttime":sys.maxint}})
+    msg.append({'host': '192.168.201.75', 'level': 62, 'group2': {"usercount":129,"stat":0,"starttime":sys.maxint}})
+    msg.append({'host': '192.168.201.75', 'level': 2501, 'group1': {"usercount":346,"stat":0,"starttime":sys.maxint}})
+    msg.append({'host': '192.168.201.75', 'level': 5001, 'group2': {"usercount":478,"stat":0,"starttime":sys.maxint}})
     # 校验1：同一个group的退休状态必须相同
     # 校验2：同一个level必须有Group1和Group2
     # 根据level和group index合并计算usercount的数目
@@ -176,20 +227,29 @@ def GetServerInfo(addrTbl):
                 if tmp == {}:
                     tmp = {"host":item['host'], 
                            "level":item['level'],
-                           "group1":{"usercount":0,"stat":-1}, 
-                           "group2":{"usercount":0,"stat":-1}}
+                           "starttime":sys.maxint,
+                           "group1":{"usercount":0,"stat":-1,"starttime":sys.maxint}, 
+                           "group2":{"usercount":0,"stat":-1,"starttime":sys.maxint}}
+                # 初始化group1
                 if item.has_key('group1'):
-                    # 初始化group1退休状态
+                    # 退休状态 
                     if tmp['group1']['stat'] == -1: 
                         tmp['group1']['stat'] = item['group1']['stat']
-                    # 计算group1的玩家人数
+                    # 计算玩家人数
                     tmp['group1']['usercount'] += item['group1']['usercount']
+                    # 进程最小启动时间
+                    if item['group1']['starttime'] < tmp['group1']['starttime']:
+                        tmp['group1']['starttime'] = item['group1']['starttime']
+                # 初始化group2
                 if item.has_key('group2'):
-                    # 初始化group2退休状态
+                    # 退休状态 
                     if tmp['group2']['stat'] == -1:
                         tmp['group2']['stat'] = item['group2']['stat']
-                    # 计算group2的玩家人数
+                    # 计算玩家人数
                     tmp['group2']['usercount'] += item['group2']['usercount']
+                    # 进程最小启动时间
+                    if item['group2']['starttime'] < tmp['group2']['starttime']:
+                        tmp['group2']['starttime'] = item['group2']['starttime']
         show.append(tmp)
     # sort by level
     show = sorted(show, cmp=lambda x,y : cmp(x['level'], y['level'])) 
