@@ -285,8 +285,10 @@ if __name__ =='__main__':
     if (platform.system() != "Windows"):
         Daemonize()
         print('run web server')
-        app.run(host='192.168.201.94', port=9999)
+        # threaded=True支持多个用户同时请求
+        app.run(host='192.168.201.94', port=9999, threaded=True)
     else:
         print('run web server')
-        app.run(host='localhost', port=9999)
+        # threaded=True支持多个用户同时请求
+        app.run(host='localhost', port=9999, threaded=True)
     
