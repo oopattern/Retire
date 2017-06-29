@@ -55,6 +55,11 @@ def ShowRetire(choice=u'普通场', htmlLog=''):
     return render_template('retire.html', title=choice, changci=json.dumps(op)) + htmlLog
 #     return json.dumps(op)
 
+# 展示图表页面
+@app.route('/chart', methods=['GET'])
+def ShowChart():
+    return render_template('chart.html')
+
 # 执行退休操作
 def OperateRetire(op):
     ret = SetRetireServer(op)
