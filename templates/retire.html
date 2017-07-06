@@ -1,0 +1,323 @@
+{% extends "index.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html>
+	<head>
+	<title>Retire Tool</title>		
+	<meta charset="utf-8">
+	<!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap-table.min.css') }}" rel="stylesheet">
+    <!-- JavaScript -->
+    <script src="static/js/jquery.min.js"></script>
+    <script src="static/js/bootstrap.min.js"></script>
+    <script src="static/js/bootstrap-table.min.js"></script>
+    <!-- Own JavaScript -->
+    <!-- <script src="static/js/ownjs/retire.js"></script> -->
+   	<!-- css -->
+    <style media="screen" type="text/css">
+		input[type='radio'] { transform: scale(2.5); }
+		p.onretired {
+			font-family:Times New Roman;
+			font-size:12px;
+			color:red;
+			white-space:pre-wrap;
+		}
+		p.cancelretired {
+			font-family:Times New Roman;
+			font-size:12px;
+			color:gray;
+			white-space:pre-wrap;
+		}
+	</style>
+	</head>
+<!-- <body> -->
+	<div class="container" style="margin-top:100px; margin-left:10px;">
+  	<form action='/retire' id="retireForm" method="post" onsubmit="return ValidRetireForm();">
+  		<!-- Example single danger button -->
+		<div class="btn-group">
+		<button id="myDropdown" type="button" class="btn btn-danger btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			{{ title }}
+		</button>
+		  	<div class="dropdown-menu" >
+		    <a class="dropdown-item" href="#">普通场</a>
+		    <a class="dropdown-item" href="#">癞子场</a>
+		    <a class="dropdown-item" href="#">双癞子场</a>
+		    <div class="dropdown-divider"></div>
+		    <a class="dropdown-item" href="#">四人场</a>
+		  	</div>
+		</div>
+        <table id="retireTable" data-click-to-select="true" ></table>
+    	<input type="hidden" id="opform" name="opform" value={{request.form['opform']}}>
+    	<button type="button" class="btn btn-primary btn-lg" value="1" onclick="OperateAllRetire(event);">整组退休</button>
+    	<button type="button" class="btn btn-primary btn-lg" value="0" onclick="OperateAllRetire(event);">取消整组</button>
+    	<button type="button" class="btn btn-danger btn-lg" value="0" onclick="ExitAllProcess(event);">关闭整组</button>
+  	</form>
+  	<script>
+  		// 检查表单提交是否合法
+  		function ValidRetireForm() {
+  			// get all submit val, Json str to Json obj
+  			var op = $('#opform').val();
+  			var obj = JSON.parse($('#opform').val()); 
+  			if(('retiremenu' in obj) || ('exitmenu' in obj)) {
+  				// 退休操作必须选择组，Group1或者Group2
+  				if(obj['group'] == undefined) {
+  					alert('退休操作：请选择退休组号!');
+  					return false;
+  				}
+  				// 提示用户确认退休操作
+  				else {
+  					return confirm(op);
+  				}
+  			}
+  			return true;
+  		};
+  		
+  		function TimeConverter(UNIX_timestamp) {
+			var a = new Date(UNIX_timestamp * 1000);
+  			var months = ['1','2','3','4','5','6','7','8','9','10','11','12'];
+  			var year = a.getFullYear();
+  			var month = months[a.getMonth()];
+  			var date = a.getDate();
+  			var hour = a.getHours();
+  			var min = a.getMinutes();
+  			var sec = a.getSeconds();
+  			var time = year + '/' + month + '/' + date + '    ' + hour + ':' + min + ':' + sec;
+  			return time;
+		}
+  	
+		// 更新单元格内容
+		function UpdateTableCell(row, field, val){
+			// 更新表格列"option"展示变为按钮
+		    $('#retireTable').bootstrapTable('updateCell', {
+                index: row,
+                field: field,
+                value: val,
+            });			
+		};
+		
+		// 初始化组的列(玩家人数和退休状态)
+    	function GroupFormatter(value, row, index) {
+    		var user = value['usercount'];
+    		var stat = ((value['stat'] == 1) ? '<p class="onretired" >已退休</p>' : '<p class="cancelretired" >未退休</p>');
+    		var starttime = '<p class="cancelretired" >' + '启动时间:' + TimeConverter(value['starttime']) + '</p>';
+    		return user.toString() + stat + starttime;
+    	}
+    	
+    	// 初始化 退出操作
+    	function ExitFormatter(value, row, index) {
+        	return ['<button type="button" class="btn btn-danger" value="1" onclick="ExitProcess(event);">关闭进程</button>'].join('');
+    	};
+		
+		// 初始化 退休操作
+		function OperateFormatter(value, row, index) {
+        	return ['<button type="button" class="btn btn-primary" value="1" onclick="OperateRetire(event);">退休操作</button>'].join('');
+    	};
+    	
+    	// 初始化 取消退休
+    	function OperateCancelFormatter(value, row, index) {
+        	return ['<button type="button" class="btn btn-success" value="0" onclick="OperateRetire(event);">取消退休</button>'].join('');  	
+    	};
+    	    	
+    	// 单个场次-退休操作/取消退休
+    	function OperateRetire(e) {
+    		e.preventDefault();
+    		// get click row index
+    		var rowIdx = e.target.parentNode.parentNode.rowIndex; // start with 1 to ...
+    		var alldata = $('#retireTable').bootstrapTable('getData');
+    		var leveltbl = [alldata[rowIdx-1]['level']];
+    		var action = event.target.value;
+    		var group = $('input[name=retiregroup]:checked', '#retireForm').val();
+    		var menu = $('#myDropdown').text();
+    		menu = menu.replace(/\s/g, '');  // remove space
+    		if(action == '1') {
+    			// 不能2组同时退休
+    			var g1_stat = ((alldata[rowIdx-1]['group1']['stat'] == 1) || (group == '1'));
+    			var g2_stat = ((alldata[rowIdx-1]['group2']['stat'] == 1) || (group == '2'));
+    			if(g1_stat && g2_stat) {
+    				alert('Group1和Group2不能同时退休!!!');
+    				return;
+    			}
+    		}    		
+    		// submit value
+	       	var op = JSON.stringify({'retiremenu':menu,'action':action,'group':group,'level':leveltbl});
+    		$('#opform').val(op);
+			$('#retireForm').submit();
+    	};
+    	
+		// 所有场次退休操作
+		// $('#allretire').on('click', function(event) {
+		// $('.btn btn-primary btn-lg allretire').on('click', function(event) {
+		function OperateAllRetire(event) {
+			event.preventDefault(); // To prevent following the link (optional)
+			// var op = JSON.stringify({'retire':'allevel'});
+			var action = event.target.value;
+			var alldata = $('#retireTable').bootstrapTable('getData');
+			var rowsize = alldata.length;
+			var leveltbl = [];
+			for(var i = 0; i < rowsize; i++) {
+				leveltbl.push(alldata[i]['level']);	
+			}
+			var group = $('input[name=retiregroup]:checked', '#retireForm').val();
+			var menu = $('#myDropdown').text();
+	       	menu = menu.replace(/\s/g, '');  // remove space
+	       	if(action == '1') {
+	       		for(var i = 0; i < rowsize; i++) {
+					// 不能2组同时退休
+	    			var g1_stat = ((alldata[i]['group1']['stat'] == 1) || (group == '1'));
+	    			var g2_stat = ((alldata[i]['group2']['stat'] == 1) || (group == '2'));
+	    			if(g1_stat && g2_stat) {
+	    				alert('Group1和Group2不能同时退休!!!');
+	    				return;
+	    			}
+	       		}
+    		}
+	       	// submit value
+	       	var op = JSON.stringify({'retiremenu':menu,'action':action,'group':group,'level':leveltbl});
+			$('#opform').val(op);
+		    $('#retireForm').submit();
+		    // console.log(JSON.stringify(tbldata));
+		};
+		
+		// 单个场次-关闭进程
+    	function ExitProcess(e) {
+    		e.preventDefault();
+    		// 没有退休的场次不能关闭进程
+    		var rowIdx = e.target.parentNode.parentNode.rowIndex; // start with 1 to ...
+    		var alldata = $('#retireTable').bootstrapTable('getData');
+    		var leveltbl = [alldata[rowIdx-1]['level']]; // make a array
+    		var action = event.target.value;
+    		var group = $('input[name=retiregroup]:checked', '#retireForm').val();
+    		var menu = $('#myDropdown').text();
+    		menu = menu.replace(/\s/g, '');  // remove space
+    		// 如果有人数则不能退出进程
+    		var usercount = alldata[rowIdx-1]['group'+group]['usercount'];
+    		var stat = alldata[rowIdx-1]['group'+group]['stat'];
+    		if((stat != 1) || (usercount > 10)) {
+    			alert('Group未退休或者在玩人数较多，不能关闭进程');
+    			return;
+    		}    		
+    		// submit value
+	       	var op = JSON.stringify({'exitmenu':menu,'action':action,'group':group,'level':leveltbl});
+    		$('#opform').val(op);
+			$('#retireForm').submit();
+    	};
+    	
+    	// 所有场次 -关闭进程
+    	function ExitAllProcess(e) {
+    		event.preventDefault(); // To prevent following the link (optional)
+			// var op = JSON.stringify({'retire':'allevel'});
+			var action = event.target.value;
+			var alldata = $('#retireTable').bootstrapTable('getData');
+			var rowsize = alldata.length;
+			var leveltbl = [];
+			for(var i = 0; i < rowsize; i++) {
+				leveltbl.push(alldata[i]['level']);	
+			}
+			var group = $('input[name=retiregroup]:checked', '#retireForm').val();
+			var menu = $('#myDropdown').text();
+	       	menu = menu.replace(/\s/g, '');  // remove space
+			// 如果有人数则不能退出进程
+			for(var i = 0; i < rowsize; i++) {
+				var usercount = alldata[i]['group'+group]['usercount'];
+    			var stat = alldata[i]['group'+group]['stat'];
+    			if((stat != 1) || (usercount > 10)) {
+	    			alert('Group未退休或者在玩人数较多，不能关闭进程');
+	    			return;
+	    		}
+			}       	
+	       	// submit value
+	       	var op = JSON.stringify({'exitmenu':menu,'action':action,'group':group,'level':leveltbl});
+    		$('#opform').val(op);
+			$('#retireForm').submit(); 	
+    	};
+		
+		// 场次切换: 所有下拉框执行同一个事件回调函数,class=".dropdown-item"
+		$(".dropdown-item").click(function(e) {		
+			// document.getElementById('myDropdown').textContent = e.target.text;
+			// $('#myDropdown').textContent = e.target.text;
+			// 提交表单获取场次信息key:levelswitch
+			var op = JSON.stringify({'levelswitch':e.target.text});
+			$('#opform').val(op);
+		    $('#retireForm').submit();
+			e.preventDefault();
+		});
+		
+		// 根据group展示操作按钮
+		function ShowGroupOption(group) { // group start with 1 to ...
+			var alldata = $('#retireTable').bootstrapTable('getData');
+			var rowsize = alldata.length;			
+			// alert(JSON.stringify(alldata));
+			for(var i = 0; i < rowsize; i++) {
+				// 根据组当前状态修改操作选项
+				var stat = alldata[i]['group'+group.toString()]['stat'];
+				var act = ((stat == 1) ? OperateCancelFormatter() : OperateFormatter());
+				var trpos = 'tr:eq(' + (i+1).toString() + ')'; 
+				$('#retireTable').find(trpos).find('td:last').html(act);
+				// UpdateTableCell(i, 'level', act);
+			}
+		};
+		
+		// group切换，根据切换group时根据退休状态切换操作按钮显示
+		// $("input[name=retiregroup]").change(function () {});
+		function SelectGroup(e) {
+			// e.preventDefault();
+			var group = e.target.value;
+			ShowGroupOption(group);
+		};
+		
+		// 表格展示
+		$(function InitTable() {
+			// 引用html变量changci
+			var points = JSON.parse('{{ changci|safe }}');
+			// 重新加载场次信息
+		    $('#retireTable').bootstrapTable({
+		        data: points,
+		        columns: [
+		        		{
+	                        field: 'host',
+	                        title: 'Host',
+	                        align: 'center',
+	                    },
+	                    {
+	                        field: 'level',
+	                        title: 'Level',
+	                        align: 'center',
+                    	},
+                    	{
+	                        field: 'group1',
+	                        title: ['Group1',
+	                        		'&nbsp;&nbsp;&nbsp;&nbsp;',
+	                        		'<input type="radio" name="retiregroup" value="1" onclick="SelectGroup(event);" />'].join(''),
+	                        align: 'center',
+	                        formatter: GroupFormatter,
+	                    },
+	                    {
+	                        field: 'group2',
+	                        title: ['Group2',
+	                        		'&nbsp;&nbsp;&nbsp;&nbsp;',
+	                        		'<input type="radio" name="retiregroup" value="2" onclick="SelectGroup(event);" checked />'].join(''),
+	                        align: 'center',
+	                        formatter: GroupFormatter,
+	                    },
+	                    {
+	                        field: 'exit',
+	                        title: 'Exit',
+	                        align: 'center',
+	                        formatter: ExitFormatter,
+	                    },
+	                    {
+	                        field: 'option',
+	                        title: 'Option',
+	                        align: 'center',
+	                        formatter: OperateFormatter,
+	                    }]
+		    });
+		    // 默认展示第2组信息
+		    ShowGroupOption('2');
+		});
+	</script>
+	</div>
+</body>
+</html>
+{% endblock %}
