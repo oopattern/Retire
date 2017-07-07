@@ -20,6 +20,7 @@ RECV_TIMEOUT_SEC = 2 # 接收超时时间，单位秒
 
 class BYSocket:
     def __init__(self):
+        self.m_bIsConnected = false
         self.m_socket = None
         self.m_Cache = []
         self.m_PacketParser = CPacketParser()
@@ -28,9 +29,15 @@ class BYSocket:
     def CreatSock(self, addr):
         try:
             self.m_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.m_socket.settimeout(0.5)
             self.m_socket.connect(addr)
+            self.m_bIsConnected = True
         except IOError as err:
             print 'creat err'
+            self.m_bIsConnected = False
+
+    def IsConnected(self):
+        return self.m_bIsConnected
 
     def RequestData(self, packet, encrpyt=False):
         if encrpyt is True:

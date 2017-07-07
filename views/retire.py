@@ -9,23 +9,12 @@ from packet import OutPacket
 from flask import Flask,request,render_template
 from views import app
 
-"""
-if (platform.system() != "Windows"):
-    import redis
-"""
 
 OPTION_RETIRE_KEY = "sys_key_retire_alloc" # 退休操作码校验
 OPTION_EXIT_KEY = "sys_key_exit_game" # 退出进程操作码校验
 CMD_GET_SERVER_INFO = 0x0906 # 内部命令，获取gameserver信息(等级，sid，玩家人数等)
 CMD_SET_SERVER_RETIRED_WEB = 0x0907 # 内部命令(web控制后台使用)，将系统retire
 CMD_REQUEST_EXIT_SERVER = 0x908 # 内部命令(web控制后台使用)，通知Alloc退出Game进程
-
-# redis配置
-REDIS_HOST = "127.0.0.1"
-REDIS_PORT = 6333
-REDIS_KEY_TURNMONEY = "TurnMoneyRecode" # 输赢排行榜key
-REDIS_KEY_ALLMONEY = "AllMoneyRecode" # 资产排行榜key
-g_redisConn = None
 
 
 # 普通场Alloc配置
@@ -126,6 +115,8 @@ def RequestExitServer(op):
         # 发包 &收包
         s = BYSocket()
         s.CreatSock(item)
+        if(s.IsConnected() == False):
+            continue
         inPkg = s.RequestData(outPkg)
         # 解包
         if inPkg == None:
@@ -163,6 +154,8 @@ def SetRetireServer(op):
         # 发包 &收包
         s = BYSocket()
         s.CreatSock(item)
+        if(s.IsConnected() == False):
+            continue
         inPkg = s.RequestData(outPkg)
         # 解包
         if inPkg == None:
@@ -193,6 +186,8 @@ def GetServerInfo(addrTbl):
         # 发包 &收包
         s = BYSocket()
         s.CreatSock(item)
+        if(s.IsConnected() == False):
+            continue
         inPkg = s.RequestData(outPkg)
         # 解包
         if inPkg == None:
@@ -212,6 +207,10 @@ def GetServerInfo(addrTbl):
                 uniLevel.append(level)
                 msg.append({"host":gameip, "level":level, "group"+str(grpidx):{"usercount":usercount,"stat":retirestat,"starttime":starttime}})        
                 # print 'cmd[%s] level[%s] usercount[%s] gameip[%s] gameport[%s] retire_stat[%s]' % (cmd,level,usercount,gameip,gameport,retirestat)
+    uniLevel.append(60)
+    uniLevel.append(61)
+    uniLevel.append(62)
+    uniLevel.append(2501)
     msg.append({'host': '192.168.201.75', 'level': 60, 'group1': {"usercount":24,"stat":0,"starttime":sys.maxint}})
     msg.append({'host': '192.168.201.75', 'level': 60, 'group2': {"usercount":33,"stat":0,"starttime":sys.maxint}})
     msg.append({'host': '192.168.201.75', 'level': 60, 'group2': {"usercount":17,"stat":0,"starttime":sys.maxint}})
